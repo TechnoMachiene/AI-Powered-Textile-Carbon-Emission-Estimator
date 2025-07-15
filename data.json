@@ -1,0 +1,32 @@
+{
+  "materials": {
+    "Cotton": 3.61,
+    "Polyester (virgin)": 3.12,
+    "Polyester (mechanically recycled)": 1.12, 
+    "Wool": 46.0,
+    "Silk": 25.0,
+    "Acrylic": 38.0,
+    "Linen / Flax": 15.0
+  },
+  "manufacturing_processes": {
+    "Spinning & Weaving": 1.25,
+    "Dyeing & Finishing": 3.0,
+    "Garment Assembly": 0.6,
+    "Leather Tanning": 22.5,   
+    "Cotton Fabric (Dyed)": 10.8
+  },
+  "origin_multipliers": {
+    "Bangladesh": 1.35,
+    "India": 1.25,
+    "China": 1.15,
+    "Turkey": 1.0,
+    "EU / US":  0.9
+  },
+  "transport_modes": {
+    "Road": 0.09,
+    "Rail": 0.03,
+    "Sea Freight": 0.025,
+    "Air Cargo": 0.75
+   }
+}
+

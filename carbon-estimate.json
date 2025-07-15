@@ -1,0 +1,196 @@
+{
+  "name": "carbon-estimate",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/calculate_co2e",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"material\": \"{{ $json.material }}\",\n  \"manufacturing_processes\": {{ JSON.stringify($json.manufacturing_processes) }},\n  \"origin\": \"{{ $json.origin }}\",\n  \"transport_mode\": \"{{ $json.transport_mode }}\",\n  \"weight\": {{ $json.weight }},\n  \"distance\": {{ $json.distance }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        180
+      ],
+      "id": "c9dc629e-24c5-4b38-b5b2-ab8862a96dc9",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        840,
+        180
+      ],
+      "id": "a2ae0b51-33e5-40e6-9a1c-9ddb71ceaa5f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "carbon-estimate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        180
+      ],
+      "id": "7109db72-7581-47ac-917a-0a90eab11bc4",
+      "name": "Webhook1",
+      "webhookId": "d5dfb35f-d1ba-4dd8-86b3-f1b950ae0221"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4.1-mini\",\n  \"temperature\": 0.3,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful assistant that extracts structured JSON from user input to estimate textile carbon emissions. Respond only in valid JSON.\\n\\nValid values are:\\n- material (string, one of): Cotton, Polyester (virgin), Polyester (mechanically recycled), Wool, Silk, Acrylic, Linen / Flax\\n- manufacturing_processes (array of strings, choose from): Spinning & Weaving, Dyeing & Finishing, Garment Assembly, Leather Tanning, Cotton Fabric (Dyed)\\n- origin (string, one of): Bangladesh, India, China, Turkey, EU / US\\n- transport_mode (string, one of): Road, Rail, Sea Freight, Air Cargo\\n- weight (float in kg)\\n- distance (int in km)\\n\\nReturn only the JSON object containing these fields and values matching the allowed options.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$json['body']['text']}}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        180
+      ],
+      "id": "aeb6f69b-aad5-4917-ba13-5f98cfd976e9",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "mz3qxp0YntSUWqhV",
+          "name": "Bearer Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = JSON.parse($json[\"choices\"][0][\"message\"][\"content\"]);\nreturn [{ json: parsed }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        180
+      ],
+      "id": "363f154f-4672-4ab6-b8a2-e1562dd2b0fa",
+      "name": "Function"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={   \"model\": \"gpt-4.1-mini\",   \"temperature\": 0.3,   \"messages\": [     {       \"role\": \"system\",       \"content\": \"You are a helpful assistant that explains carbon emission values. Based on the CO2e in kg, explain whether the value is high, moderate, or low in a friendly, understandable way. Mention how it might compare to common benchmarks like car travel or daily electricity usage. Respond in 2 sentences maximum.\"     },     {       \"role\": \"user\",       \"content\": \"The estimated carbon emissions are {{$json['total_co2e_kg']}} kg CO2e.\"     }   ] }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "83fb2f6d-16e1-4dfe-bb10-407f585c990c",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "mz3qxp0YntSUWqhV",
+          "name": "Bearer Auth account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e4108a47-71fe-4d1b-b875-25781aeb64b7",
+  "meta": {
+    "instanceId": "1bd6eab0f95021e03a6b7be0f427465c1313b130afd3d4dcff15686cac824f43"
+  },
+  "id": "Zx9NN9uVIMemVOhH",
+  "tags": []
+}
